@@ -16,7 +16,8 @@
     "ejs": "^5.0.1",
     "express": "^5.2.1",
     "groq-sdk": "^1.1.1",
-    "openai": "^6.27.0"
+    "openai": "^6.27.0",
+    "razorpay": "^2.9.6"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

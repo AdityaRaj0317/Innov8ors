@@ -1,49 +1,44 @@
 const axios = require("axios");
 
-async function getRepoCode(repoUrl) {
+async function getRepoFiles(repoLink) {
 
-  try {
-
-    const parts = repoUrl.replace("https://github.com/", "").split("/");
-
+    const parts = repoLink.replace("https://github.com/", "").split("/");
     const owner = parts[0];
     const repo = parts[1];
 
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents`;
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/main?recursive=1`;
 
     const response = await axios.get(apiUrl);
 
-    const files = response.data;
+    const files = response.data.tree;
 
+    let structure = "";
     let code = "";
 
-    for (const file of files) {
+    for (let file of files) {
 
-      if (file.type === "file" && file.download_url) {
+        if (file.path.endsWith(".js") ||
+            file.path.endsWith(".java") ||
+            file.path.endsWith(".py")) {
 
-        if (
-          file.name.endsWith(".js") ||
-          file.name.endsWith(".java") ||
-          file.name.endsWith(".ts")
-        ) {
+            structure += file.path + "\n";
 
-          const fileData = await axios.get(file.download_url);
+            try {
 
-          code += `\n\nFile: ${file.name}\n${fileData.data}`;
+                const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/main/${file.path}`;
+
+                const fileContent = await axios.get(rawUrl);
+
+                code += `\nFILE: ${file.path}\n`;
+                code += fileContent.data.substring(0, 1500);
+
+            } catch (err) {}
+
         }
-      }
     }
 
-    return code;
-
-  } catch (error) {
-
-    console.error("GitHub fetch error", error);
-
-    return "";
-
-  }
+    return { structure, code };
 
 }
 
-module.exports = { getRepoCode };
+module.exports = { getRepoFiles };
